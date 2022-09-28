@@ -1,47 +1,37 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import Login from "./components/Login";
-import {
-  BrowserRouter as Router,
-  Navigate,
-  Route,
-  Routes,
-  useNavigate,
-} from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import Home from "./components/Home";
-import PrivateRoutes from "./components/common/privateRoutes";
-import { authContext } from "./components/common/context/AuthContext";
+import PrivateRoutes from "./common/privateRoutes";
+import { authContext } from "./common/context/AuthContext";
+import privateInstance from "./common/api/privateApi";
 
 function App() {
   const { authenticate, logout } = useContext(authContext);
+
   useEffect(() => {
     (async () => {
       try {
-        const response = await fetch("http://localhost:8081/refresh", {
-          credentials: "include",
-        });
-        const result = await response.json();
-        if (result.success) {
-          authenticate(result.token);
+        const response = await privateInstance.get("/refresh");
+        const { data } = response;
+        if (data.success) {
+          authenticate(data.token);
         } else {
           logout();
         }
-      } catch (error) {
-        console.error(error);
-      }
+      } catch (error) {}
     })();
   }, []);
 
   return (
     <div className="App">
-      <Router>
-        <Routes>
-          <Route path="/" element={<PrivateRoutes />}>
-            <Route path="" element={<Home />} />
-            <Route path="/about" element={<h1>About</h1>} />
-          </Route>
-          <Route path="/login" element={<Login />} />
-        </Routes>
-      </Router>
+      <Routes>
+        <Route path="/" element={<PrivateRoutes />}>
+          <Route path="" element={<Home />} />
+          <Route path="/about" element={<h1>About</h1>} />
+        </Route>
+        <Route path="/login" element={<Login />} />
+      </Routes>
     </div>
   );
 }

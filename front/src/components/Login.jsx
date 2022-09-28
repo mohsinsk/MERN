@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { authContext } from "./common/context/AuthContext";
+import { authContext } from "../common/context/AuthContext";
 
 import "./Login.css";
 
@@ -21,9 +21,7 @@ function Login() {
       });
       const result = await response.json();
       authenticate(result.token);
-    } catch (error) {
-      console.error(error);
-    }
+    } catch (error) {}
   };
 
   const handleInputChange = (e) => {
@@ -31,7 +29,7 @@ function Login() {
     setFormData({ ...formData, [name]: value });
   };
 
-  if (token) return <Navigate to="/" />;
+  if (token && token !== 2) return <Navigate to="/" />;
 
   return (
     <div className="login_card">

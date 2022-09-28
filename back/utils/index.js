@@ -20,7 +20,6 @@ module.exports = {
   },
 
   validateRefreshToken: (token) => {
-    console.log(token);
     if (jwt.verify(token, process.env.REFRESH_SECRET_KEY)) return true;
 
     return false;

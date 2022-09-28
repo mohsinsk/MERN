@@ -14,14 +14,14 @@ module.exports = {
           sameSite: "strict",
           secure: true,
           path: "/",
-          expires: new Date(Date.now() + 10 * 1000),
+          expires: new Date(Date.now() + 3 * 1000),
         })
         .cookie("refreshToken", refreshToken, {
           httpOnly: true,
           sameSite: "strict",
           secure: true,
           path: "/refresh",
-          expires: new Date(Date.now() + 12 * 1000),
+          expires: new Date(Date.now() + 5 * 1000),
         })
         .json({ success: true, token });
     }
@@ -31,9 +31,19 @@ module.exports = {
       .json({ success: false, message: "Invalid credentials" });
   },
 
+  logout: (req, res) => {
+    return res
+      .clearCookie("refreshToken", { path: "/refresh" })
+      .clearCookie("accessToken", { path: "/" })
+      .status(200)
+      .json({ success: true });
+  },
+
   refresh: (req, res) => {
     if (!req?.cookies?.refreshToken)
-      return res.json({ success: false, message: "no refresh token provided" });
+      return res
+        .status(200)
+        .json({ success: false, message: "no refresh token provided" });
     if (
       ({ username } = tokenUtils.validateRefreshToken(req.cookies.refreshToken))
     ) {
@@ -46,20 +56,20 @@ module.exports = {
           sameSite: "strict",
           secure: true,
           path: "/",
-          expires: new Date(Date.now() + 10 * 1000),
+          expires: new Date(Date.now() + 3 * 1000),
         })
         .cookie("refreshToken", refreshToken, {
           httpOnly: true,
           sameSite: "strict",
           secure: true,
           path: "/refresh",
-          expires: new Date(Date.now() + 12 * 1000),
+          expires: new Date(Date.now() + 5 * 1000),
         })
         .json({ success: true, token });
     }
 
     return res
-      .status(400)
+      .status(200)
       .json({ success: false, message: "refresh token expired" });
   },
 };
