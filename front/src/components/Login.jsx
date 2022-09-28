@@ -1,14 +1,13 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
+import { authContext } from "./common/context/AuthContext";
 
 import "./Login.css";
 
 function Login() {
+  const { token, authenticate } = useContext(authContext);
   const [formData, setFormData] = useState({});
-  const [loggedIn, setLoggedIn] = useState(() =>
-    localStorage.getItem("user") ? true : false
-  );
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -21,8 +20,7 @@ function Login() {
         credentials: "include",
       });
       const result = await response.json();
-      setLoggedIn(result.success);
-      localStorage.setItem("user", result.accessToken);
+      authenticate(result.token);
     } catch (error) {
       console.error(error);
     }
@@ -33,7 +31,7 @@ function Login() {
     setFormData({ ...formData, [name]: value });
   };
 
-  if (loggedIn) return <Navigate to="/" />;
+  if (token) return <Navigate to="/" />;
 
   return (
     <div className="login_card">
@@ -44,7 +42,7 @@ function Login() {
         <input type="submit" value="Login" />
       </form>
 
-      <h2 style={{ margin: 0 }}>{loggedIn ? "Logged In" : "Please Login"}</h2>
+      <h2 style={{ margin: 0 }}>{token ? "Logged In" : "Please Login"}</h2>
     </div>
   );
 }
