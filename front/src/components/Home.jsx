@@ -1,8 +1,8 @@
 import React, { useContext } from "react";
-import { useEffect } from "react";
 import { useState } from "react";
 import privateInstance from "../common/api/privateApi";
 import { authContext } from "../common/context/AuthContext";
+import { Link } from "react-router-dom";
 
 function Home() {
   const { logout } = useContext(authContext);
@@ -46,6 +46,7 @@ function Home() {
     <div>
       <button onClick={handleRefreshToken}>refresh token</button>
       <button onClick={fetchUsers}>fetch Users</button>
+      <Link to="/about">About</Link>
       {users && users.map((user) => <h1 key={user.name}>{user.name}</h1>)}
       <button onClick={handleLogout}>Logout</button>
     </div>

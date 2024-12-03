@@ -4,31 +4,30 @@ module.exports = {
   login: (req, res) => {
     const { username, password } = req.body;
 
-    if (username === "1mohsin.sk@gmail.com" && password === "mohsin") {
-      const token = tokenUtils.generateToken({ username }, "1h");
-      const refreshToken = tokenUtils.generateRefreshToken({ username }, "1h");
+    // Hardcoded credentials for testing (use a database in production)
+    if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
+      const token = tokenUtils.generateToken({ username }, "15m");
+      const refreshToken = tokenUtils.generateRefreshToken({ username }, "7d");
       return res
         .status(200)
         .cookie("accessToken", token, {
           httpOnly: true,
           sameSite: "strict",
-          secure: true,
+          secure: process.env.NODE_ENV === "production",
           path: "/",
-          expires: new Date(Date.now() + 3 * 1000),
+          expires: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
         })
         .cookie("refreshToken", refreshToken, {
           httpOnly: true,
           sameSite: "strict",
-          secure: true,
+          secure: process.env.NODE_ENV === "production",
           path: "/refresh",
-          expires: new Date(Date.now() + 5 * 1000),
+          expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
         })
-        .json({ success: true, token });
+        .json({ success: true });
     }
 
-    return res
-      .status(200)
-      .json({ success: false, message: "Invalid credentials" });
+    return res.status(401).json({ success: false, message: "Invalid credentials" });
   },
 
   logout: (req, res) => {
@@ -40,36 +39,41 @@ module.exports = {
   },
 
   refresh: (req, res) => {
-    if (!req?.cookies?.refreshToken)
-      return res
-        .status(200)
-        .json({ success: false, message: "no refresh token provided" });
-    if (
-      ({ username } = tokenUtils.validateRefreshToken(req.cookies.refreshToken))
-    ) {
-      const token = tokenUtils.generateToken({ username }, "1h");
-      const refreshToken = tokenUtils.generateRefreshToken({ username }, "1h");
+    const { refreshToken } = req.cookies;
+
+    if (!refreshToken) {
+      return res.status(400).json({ success: false, message: "No refresh token provided" });
+    }
+
+    try {
+      const payload = tokenUtils.validateRefreshToken(refreshToken);
+      if (!payload) {
+        return res.status(401).json({ success: false, message: "Invalid refresh token" });
+      }
+
+      const { username } = payload;
+      const token = tokenUtils.generateToken({ username }, "15m");
+      const newRefreshToken = tokenUtils.generateRefreshToken({ username }, "7d");
+
       return res
         .status(200)
         .cookie("accessToken", token, {
           httpOnly: true,
           sameSite: "strict",
-          secure: true,
+          secure: process.env.NODE_ENV === "production",
           path: "/",
-          expires: new Date(Date.now() + 3 * 1000),
+          expires: new Date(Date.now() + 15 * 60 * 1000),
         })
-        .cookie("refreshToken", refreshToken, {
+        .cookie("refreshToken", newRefreshToken, {
           httpOnly: true,
           sameSite: "strict",
-          secure: true,
+          secure: process.env.NODE_ENV === "production",
           path: "/refresh",
-          expires: new Date(Date.now() + 5 * 1000),
+          expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         })
-        .json({ success: true, token });
+        .json({ success: true });
+    } catch (err) {
+      return res.status(401).json({ success: false, message: "Invalid refresh token" });
     }
-
-    return res
-      .status(200)
-      .json({ success: false, message: "refresh token expired" });
   },
 };

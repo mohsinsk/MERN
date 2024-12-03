@@ -1,8 +1,18 @@
 import { useContext } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { authContext } from "./context/AuthContext";
 
-export default function PrivateRoutes() {
-  const { token } = useContext(authContext);
-  return token ? <Outlet /> : <Navigate to="/login" />;
-}
+const PrivateRoutes = () => {
+  const { isAuthenticated, loading } = useContext(authContext);
+  const location = useLocation();
+
+  if (loading) return <div>Loading...</div>; // Prevent premature redirects
+
+  return isAuthenticated ? (
+    <Outlet />
+  ) : (
+    <Navigate to="/login" state={{ from: location }} />
+  );
+};
+
+export default PrivateRoutes;

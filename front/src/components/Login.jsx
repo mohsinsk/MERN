@@ -1,48 +1,63 @@
-import React, { useContext } from "react";
-import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useState, useContext } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { authContext } from "../common/context/AuthContext";
-
+import privateInstance from "../common/api/privateApi";
 import "./Login.css";
 
-function Login() {
-  const { token, authenticate } = useContext(authContext);
-  const [formData, setFormData] = useState({});
-
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await fetch("http://localhost:8081/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-        credentials: "include",
-      });
-      const result = await response.json();
-      authenticate(result.token);
-    } catch (error) {}
-  };
+const Login = () => {
+  const [credentials, setCredentials] = useState({ username: "", password: "" });
+  const [error, setError] = useState(null);
+  const { authenticate } = useContext(authContext);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setCredentials({ ...credentials, [name]: value });
   };
 
-  if (token && token !== 2) return <Navigate to="/" />;
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await privateInstance.post("/login", credentials);
+      if (response.data.success) {
+        authenticate(response.data.success);
+        const redirectTo = location.state?.from?.pathname || "/";
+        navigate(redirectTo); // Redirect to the intended route or home
+      } else {
+        setError("Invalid credentials");
+      }
+    } catch (err) {
+      console.error("Login failed:", err);
+      setError("An error occurred during login.");
+    }
+  };
 
   return (
     <div className="login_card">
-      <form onSubmit={handleFormSubmit} onChange={handleInputChange}>
-        <input type="text" name="username" placeholder="username" />
-        <input type="password" name="password" placeholder="password" />
-
-        <input type="submit" value="Login" />
+      <h1>Login</h1>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <form onSubmit={handleLogin}>
+        <input
+          type="email"
+          name="username"
+          placeholder="Email"
+          value={credentials.username}
+          onChange={handleInputChange}
+          required
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={credentials.password}
+          onChange={handleInputChange}
+          required
+        />
+        <input type="submit" value={"Login"} />
       </form>
-
-      <h2 style={{ margin: 0 }}>{token ? "Logged In" : "Please Login"}</h2>
     </div>
   );
-}
+};
 
 export default Login;

@@ -1,13 +1,14 @@
-import { useContext, useEffect } from "react";
-import Login from "./components/Login";
-import { Route, Routes } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import Home from "./components/Home";
+import Login from "./components/Login";
 import PrivateRoutes from "./common/privateRoutes";
 import { authContext } from "./common/context/AuthContext";
 import privateInstance from "./common/api/privateApi";
 
 function App() {
   const { authenticate, logout } = useContext(authContext);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -15,13 +16,20 @@ function App() {
         const response = await privateInstance.get("/refresh");
         const { data } = response;
         if (data.success) {
-          authenticate(data.token);
+          authenticate(data.success); // Store the token
         } else {
           logout();
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error("Error refreshing token:", error);
+        logout();
+      } finally {
+        setIsLoading(false);
+      }
     })();
   }, []);
+
+  if (isLoading) return <div>Loading...</div>; // Loading state while checking auth
 
   return (
     <div className="App">

@@ -6,35 +6,34 @@ const WithInterceptor = ({ children }) => {
   const { authenticate, logout } = useContext(authContext);
 
   useMemo(() => {
-    privateApi.interceptors.response.use(
-      (res) => {
-        return res;
-      },
+    const interceptor = privateApi.interceptors.response.use(
+      (res) => res,
       async (err) => {
         const originalConfig = err.config;
 
         if (originalConfig.url !== "/login" && err.response) {
-          // Access Token was expired
           if (err.response.status === 401 && !originalConfig._retry) {
             originalConfig._retry = true;
 
             try {
               const rs = await privateApi.get("/refresh");
-
-              const { token } = rs.data;
-              authenticate(token);
+              const { success } = rs.data;
+              authenticate(success);
+              return privateApi(originalConfig);
             } catch (_error) {
-              originalConfig._retry = false;
               logout();
+              return Promise.reject(_error);
             }
-            return privateApi(originalConfig);
           }
         }
 
         return Promise.reject(err);
       }
     );
-  }, []);
+
+    // Cleanup interceptor on unmount
+    return () => privateApi.interceptors.response.eject(interceptor);
+  }, [authenticate, logout]);
 
   return children;
 };
