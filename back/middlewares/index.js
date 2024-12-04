@@ -4,18 +4,28 @@ const excludedPaths = ["/login", "/refresh"];
 
 module.exports = {
   validateToken: (req, res, next) => {
+    // Exclude specified paths from validation
     if (!excludedPaths.includes(req.path)) {
-      let token = req.cookies.accessToken;
+      const token = req.cookies.accessToken;
 
-      if (!token)
+      if (!token) {
         return res
           .status(401)
           .json({ success: false, message: "No token provided" });
+      }
 
-      if (!jwt.verify(token, process.env.ACCESS_SECRET_KEY))
-        return res
-          .status(401)
-          .json({ success: false, message: "Unauthorized access" });
+      try {
+        // Verify token using the secret key
+        jwt.verify(token, process.env.ACCESS_SECRET_KEY);
+      } catch (err) {
+        // Handle verification errors
+        return res.status(401).json({
+          success: false,
+          message: err.name === "TokenExpiredError" 
+            ? "Token has expired" 
+            : "Unauthorized access",
+        });
+      }
     }
 
     next();
