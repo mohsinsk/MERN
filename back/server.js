@@ -1,10 +1,15 @@
-const express = require("express");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const middlewares = require("./middlewares");
-require("dotenv").config();
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import validateToken from "./middlewares/index.js";
+import { config } from "dotenv";
+import routes from "./routes/index.js";
+import connectDB from './db.js';
 
 const app = express();
+
+config();
+connectDB();
 
 app.use(
   cors({
@@ -12,11 +17,11 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(cookieParser());
 app.use(express.json());
-app.use(middlewares.validateToken);
+app.use(validateToken);
 
-const routes = require("./routes");
 app.use("/", routes);
 
 const PORT = process.env.PORT || 8081;

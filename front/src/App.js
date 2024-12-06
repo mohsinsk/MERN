@@ -1,7 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "./components/Home";
-import Login from "./components/Login";
+import Login from "./components/Auth/Login";
+import Register from "./components/Auth/Register";
 import PrivateRoutes from "./common/privateRoutes";
 import { authContext } from "./common/context/AuthContext";
 import privateInstance from "./common/api/privateApi";
@@ -39,6 +40,7 @@ function App() {
           <Route path="/about" element={<h1>About</h1>} />
         </Route>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
       </Routes>
     </div>
   );

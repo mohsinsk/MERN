@@ -1,27 +1,26 @@
-const jwt = require("jsonwebtoken");
-module.exports = {
-  generateToken: (data, expiry = "1h") => {
-    return jwt.sign(
-      {
-        ...data,
-      },
-      process.env.ACCESS_SECRET_KEY,
-      { expiresIn: expiry }
-    );
-  },
-  generateRefreshToken: (data, expiry = "7d") => {
-    return jwt.sign(
-      {
-        ...data,
-      },
-      process.env.REFRESH_SECRET_KEY,
-      { expiresIn: expiry }
-    );
-  },
+import jwt from "jsonwebtoken";
 
-  validateRefreshToken: (token) => {
-    if (jwt.verify(token, process.env.REFRESH_SECRET_KEY)) return true;
+export const generateToken = (data, expiry = "1h") => {
+  return jwt.sign(
+    {
+      ...data,
+    },
+    process.env.ACCESS_SECRET_KEY,
+    { expiresIn: expiry }
+  );
+}
 
-    return false;
-  },
-};
+export const generateRefreshToken = (data, expiry = "7d") => {
+  return jwt.sign(
+    {
+      ...data,
+    },
+    process.env.REFRESH_SECRET_KEY,
+    { expiresIn: expiry }
+  );
+}
+
+export const validateRefreshToken = (token) => {
+  if (jwt.verify(token, process.env.REFRESH_SECRET_KEY)) return true;
+  return false;
+}
