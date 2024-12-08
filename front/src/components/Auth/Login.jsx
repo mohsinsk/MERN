@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom'; // For navigation after login
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // For navigation after login
 import { Toast, ToastContainer } from 'react-bootstrap';
 import { FaEnvelope, FaLock } from 'react-icons/fa';
 import { authContext } from '../../common/context/AuthContext';
@@ -9,7 +9,8 @@ import privateInstance from '../../common/api/privateApi';
 const LoginForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '', rememberMe: false });
   const [errors, setErrors] = useState({});
-  const [success, setSuccess] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [response, setResponse] = useState({});
   const { authenticate } = useContext(authContext);
   const location = useLocation();
   const navigate = useNavigate();
@@ -36,22 +37,33 @@ const LoginForm = () => {
     e.preventDefault();
     try {
       const response = await privateInstance.post("/login", formData);
-      if (response.data.success) {
-        setSuccess(true);
+      if (response.data.success && response.status === 200) {
+        setShowToast(true);
+        setResponse({
+          type: 'success',
+          heading: 'Success',
+          message: 'Login Success, Redirecting to Home'
+        })
         authenticate(response.data.success);
         const redirectTo = location.state?.from?.pathname || "/";
         setTimeout(() => {
           navigate(redirectTo); // Redirect to the intended route or /
         }, 2000);
       } else {
-        setErrors({
-          authenticate: "Invalid credentials"
-        });
+        setShowToast(true);
+        setResponse({
+          type: 'danger',
+          heading: 'Error',
+          message: 'User Not Found'
+        })
       }
     } catch (err) {
-      setErrors({
-        authenticate: `Login failed: ${err}`
-      });
+      setShowToast(true);
+      setResponse({
+        type: 'danger',
+        heading: 'Error',
+        message: err?.message
+      })
     }
   };
 
@@ -139,10 +151,6 @@ const LoginForm = () => {
                   </button>
                 </div>
 
-                <div className="d-grid mb3">
-                  {errors.authenticate && <div className="invalid-feedback">{errors.authenticate}</div>}
-                </div>
-
                 {/* Links */}
                 <div className="text-center">
                   <p>
@@ -152,9 +160,9 @@ const LoginForm = () => {
                   </p>
                   <p>
                     Don't have an account?{' '}
-                    <a href="/register" className="text-decoration-none">
+                    <Link to="/register" className="text-decoration-none">
                       Register
-                    </a>
+                    </Link>
                   </p>
                 </div>
               </form>
@@ -165,11 +173,11 @@ const LoginForm = () => {
 
       {/* Toast for Success Message */}
       <ToastContainer className="p-3" position="top-end">
-        <Toast bg="success" show={success} onClose={() => setSuccess(false)} delay={3000} autohide>
+        <Toast bg={response?.type || 'success'} show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide>
           <Toast.Header>
-            <strong className="me-auto">Success</strong>
+            <strong className="me-auto">{response?.heading}</strong>
           </Toast.Header>
-          <Toast.Body className="text-white">Login successful! Redirecting to Home...</Toast.Body>
+          <Toast.Body className="text-white">{response?.message}</Toast.Body>
         </Toast>
       </ToastContainer>
     </div>

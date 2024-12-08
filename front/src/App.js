@@ -6,6 +6,7 @@ import Register from "./components/Auth/Register";
 import PrivateRoutes from "./common/privateRoutes";
 import { authContext } from "./common/context/AuthContext";
 import privateInstance from "./common/api/privateApi";
+import Loader from "./common/components/Loader";
 
 function App() {
   const { authenticate, logout } = useContext(authContext);
@@ -30,7 +31,7 @@ function App() {
     })();
   }, []);
 
-  if (isLoading) return <div>Loading...</div>; // Loading state while checking auth
+  if (isLoading) return <Loader />; // Loading state while checking auth
 
   return (
     <div className="App">

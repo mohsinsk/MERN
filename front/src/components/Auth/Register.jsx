@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Toast, ToastContainer } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import privateInstance from '../../common/api/privateApi';
+import { useNavigate } from 'react-router-dom'; // For navigation after login
+import { FaLock, FaMailBulk, FaUser } from 'react-icons/fa';
 
 const RegisterForm = () => {
     const [formData, setFormData] = useState({
@@ -11,8 +14,10 @@ const RegisterForm = () => {
     });
 
     const [errors, setErrors] = useState({});
-    const [success, setSuccess] = useState(false);
+    const [showToast, setShowToast] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [response, setResponse] = useState({});
+    const navigate = useNavigate();
 
     const validateForm = () => {
         const { name, email, password, confirmPassword } = formData;
@@ -45,9 +50,40 @@ const RegisterForm = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (validateForm()) {
-            setSuccess(true);
-            setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-            setErrors({});
+            (async () => {
+                try {
+                    const response = await privateInstance.post("/register", formData);
+                    if (response.data.success && response.status === 200) {
+                        setShowToast(true);
+                        setResponse({
+                            type: 'sucess',
+                            heading: 'Success',
+                            message: 'Registration Successful..!'
+                        })
+                        setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+                        setErrors({});
+                        const redirectTo = "/login";
+                        setTimeout(() => {
+                            navigate(redirectTo); // Redirect to the intended route or /
+                        }, 2000);
+
+                    } else {
+                        setShowToast(true);
+                        setResponse({
+                            type: 'danger',
+                            heading: 'Error',
+                            message: 'Opps..! Something went wrong'
+                        })
+                    }
+                } catch (err) {
+                    setShowToast(true);
+                    setResponse({
+                        type: 'danger',
+                        heading: 'Error',
+                        message: 'Opps..! Something went wrong'
+                    })
+                }
+            })()
         }
     };
 
@@ -68,15 +104,21 @@ const RegisterForm = () => {
                                     <label htmlFor="name" className="form-label">
                                         Name
                                     </label>
-                                    <input
-                                        type="text"
-                                        className={`form-control ${errors.name ? 'is-invalid' : ''}`}
-                                        id="name"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                    />
-                                    {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+                                    <div className="input-group">
+                                        <span className="input-group-text">
+                                            <FaUser />
+                                        </span>
+
+                                        <input
+                                            type="text"
+                                            className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                                            id="name"
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                        />
+                                        {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+                                    </div>
                                 </div>
 
                                 {/* Email */}
@@ -84,15 +126,21 @@ const RegisterForm = () => {
                                     <label htmlFor="email" className="form-label">
                                         Email
                                     </label>
-                                    <input
-                                        type="email"
-                                        className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                                        id="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                    />
-                                    {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+
+                                    <div className="input-group">
+                                        <span className="input-group-text">
+                                            <FaMailBulk />
+                                        </span>
+                                        <input
+                                            type="email"
+                                            className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                                            id="email"
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                        />
+                                        {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+                                    </div>
                                 </div>
 
                                 {/* Password */}
@@ -100,7 +148,11 @@ const RegisterForm = () => {
                                     <label htmlFor="password" className="form-label">
                                         Password
                                     </label>
+
                                     <div className="input-group">
+                                        <span className="input-group-text">
+                                            <FaLock />
+                                        </span>
                                         <input
                                             type={showPassword ? 'text' : 'password'}
                                             className={`form-control ${errors.password ? 'is-invalid' : ''}`}
@@ -125,17 +177,22 @@ const RegisterForm = () => {
                                     <label htmlFor="confirmPassword" className="form-label">
                                         Confirm Password
                                     </label>
-                                    <input
-                                        type="password"
-                                        className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
-                                        id="confirmPassword"
-                                        name="confirmPassword"
-                                        value={formData.confirmPassword}
-                                        onChange={handleChange}
-                                    />
-                                    {errors.confirmPassword && (
-                                        <div className="invalid-feedback">{errors.confirmPassword}</div>
-                                    )}
+                                    <div className="input-group">
+                                        <span className="input-group-text">
+                                            <FaLock />
+                                        </span>
+                                        <input
+                                            type="password"
+                                            className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
+                                            id="confirmPassword"
+                                            name="confirmPassword"
+                                            value={formData.confirmPassword}
+                                            onChange={handleChange}
+                                        />
+                                        {errors.confirmPassword && (
+                                            <div className="invalid-feedback">{errors.confirmPassword}</div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Submit Button */}
@@ -144,27 +201,33 @@ const RegisterForm = () => {
                                         Register
                                     </button>
                                 </div>
+
+                                <div className="text-center mt-3">
+                                    <p>
+                                        Already have an account?{' '}
+                                        <Link to="/login" className="text-decoration-none">
+                                            Login
+                                        </Link>
+                                    </p>
+                                </div>
                             </form>
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Toast for Success Message */}
-            <ToastContainer className="p-3" position="top-end">
-                <Toast bg="success" show={success} onClose={() => setSuccess(false)} delay={3000} autohide>
+            < ToastContainer className="p-3" position="top-end" >
+                <Toast bg={response?.type} show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide>
                     <Toast.Header>
-                        <strong className="me-auto">Success</strong>
+                        <strong className="me-auto">{response?.heading}</strong>
                     </Toast.Header>
                     <Toast.Body className="text-white">
-                        Registration successful!{' '}
-                        <Link to="/login" className="text-white text-decoration-underline">
-                            Go To Login
-                        </Link>
+                        {response?.message}
                     </Toast.Body>
                 </Toast>
-            </ToastContainer>
-        </div>
+            </ToastContainer >
+        </div >
     );
 };
 

@@ -2,6 +2,8 @@ import { useContext, useMemo } from "react";
 import privateApi from "../api/privateApi";
 import { authContext } from "../context/AuthContext";
 
+const endpointsToExclude = ['/login', '/register', '/refresh'];
+
 const WithInterceptor = ({ children }) => {
   const { authenticate, logout } = useContext(authContext);
 
@@ -25,8 +27,8 @@ const WithInterceptor = ({ children }) => {
       async (err) => {
         const originalConfig = err.config;
 
-        // Avoid handling the login and refresh endpoint requests
-        if (originalConfig.url === "/login" || originalConfig.url === "/refresh" || !err.response) {
+        // Avoid handling the login, register and refresh endpoint requests
+        if (endpointsToExclude.includes(originalConfig.url) || !err.response) {
           return Promise.reject(err);
         }
 

@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken"
 
 export default function validateToken(req, res, next) {
   // Exclude specified paths from validation
-  const excludedPaths = ["/login", "/refresh"];
+  const excludedPaths = ["/login", "/refresh", "/register"];
   if (!excludedPaths.includes(req.path)) {
     const token = req.cookies.accessToken;
 
